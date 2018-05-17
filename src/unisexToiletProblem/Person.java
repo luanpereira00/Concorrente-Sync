@@ -2,22 +2,22 @@ package unisexToiletProblem;
 
 public class Person {
 	private Gender gender;
-	private Integer time_to_use;
+	private Integer timeToUse;
 	
 	public Person(Gender gender){
 		this.gender = gender;
-		time_to_use = 0;
+		timeToUse = null;
 	}
 
 	public Gender getGender() {
 		return gender;
 	}
 
-	public Integer getTime_to_use() {
-		return time_to_use;
+	public Integer getTimeToUse() {
+		return timeToUse;
 	}
 
-	public void setTime_to_use(Integer time_to_use) {
-		this.time_to_use = time_to_use;
+	public void setTimeToUse(Integer time_to_use) {
+		this.timeToUse = time_to_use;
 	}
 }
