@@ -7,7 +7,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 
 public class Toilet extends Thread{
-	//private LinkedList<ArrayList<Person>> queueToToilet;
 	private LinkedList<Person> queueToToilet;
 	private int maxOfUsers;
 	private int maxTimeOfUse;
@@ -24,10 +23,13 @@ public class Toilet extends Thread{
 		queueToToilet = new LinkedList<>();
 	}
 	
+	public boolean isEmpty() {
+		return semaphore.availablePermits()==maxOfUsers;
+	}
+	
 	//TODO ATENTION -> Try_Catch
 	public void run() {
 		Person person;
-		viewQueue();
 		while(true) {
 			person = getNextInQueue();
 			if(person != null) {
@@ -41,12 +43,9 @@ public class Toilet extends Thread{
 				person.start();
 
 				queueToToilet.remove(person);
-				
-				System.out.println("=============================================");
-				
-				viewToilet(semaphore.availablePermits());
-				System.out.println("=============================================");
-			} else inToiletNow = null;
+				} else {
+				if(isEmpty()) inToiletNow = null;
+			} 
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
@@ -102,14 +101,6 @@ public class Toilet extends Thread{
 		System.out.println(inToilet);
 	}
 	
-	
-//	public Queue<ArrayList<Person>> getQueueToToilet() {
-//		return queueToToilet;
-//	}
-
-//	public void setQueueToToilet(Queue<ArrayList<Person>> queueToToilet) {
-//		this.queueToToilet = queueToToilet;
-//	}
 	public boolean toiletIsEmpty() {
 		if(inToiletNow == null) return true;
 		else return false;
