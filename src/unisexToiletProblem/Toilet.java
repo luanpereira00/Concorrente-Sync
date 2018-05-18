@@ -3,8 +3,10 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadLocalRandom;
 
-public class Toilet {
+
+public class Toilet extends Thread{
 	//private LinkedList<ArrayList<Person>> queueToToilet;
 	private LinkedList<Person> queueToToilet;
 	private int maxOfUsers;
@@ -13,30 +15,47 @@ public class Toilet {
 	private Gender inToiletNow;
 	
 	Toilet(int maxOfUsers, int maxTimeOfUse){
-		//TO_DO-> try_catch InvalidArgument
+		//TODO-> try_catch InvalidArgument
 		this.maxTimeOfUse = maxTimeOfUse;
 		this.maxOfUsers = maxOfUsers;
 		inToiletNow = null;
 		
-		semaphore = new Semaphore(maxOfUsers);
+		semaphore = new Semaphore(maxOfUsers,true);
 		queueToToilet = new LinkedList<>();
 	}
 	
-	//ATENTION -> Try_Catch
-	public void act() throws InterruptedException {
+	//TODO ATENTION -> Try_Catch
+	public void run() {
 		Person person;
+		viewQueue();
 		while(true) {
-			//lock
 			person = getNextInQueue();
 			if(person != null) {
 				inToiletNow = person.getGender();
-				//person.act();
+				try {
+					semaphore.acquire();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				person.setSemaphore(semaphore);
+				person.start();
+
+				queueToToilet.remove(person);
+				
+				System.out.println("=============================================");
+				
+				viewToilet(semaphore.availablePermits());
+				System.out.println("=============================================");
+			} else inToiletNow = null;
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			//unlock
-			Thread.sleep(5);
 		}
 	}
-	
+
 	public Person getNextInQueue() {
 		if(inToiletNow != null) {
 			switch(inToiletNow) {
@@ -59,12 +78,12 @@ public class Toilet {
 	}
 
 	public void addToQueue(Person person) {
-		//person.setTimeToUse(maxTimeOfUse);
+		person.setTimeToUse(ThreadLocalRandom.current().nextInt(1,maxTimeOfUse+1));
 		queueToToilet.addLast(person);
 	}
 
 	public void viewQueue() {
-		String queue = "[";
+		String queue = "QUEUE =  [";
 		for(Person person : queueToToilet) {
 			if(person.getGender() == Gender.MALE) queue += "M";
 			else queue += "F";
@@ -73,6 +92,15 @@ public class Toilet {
 		System.out.println(queue);
 	}
 	
+	public void viewToilet(int availablePermits) {
+		String inToilet = "TOILET = [";
+		for(int i=maxOfUsers; i>availablePermits; i--) {
+			if(inToiletNow == Gender.MALE) inToilet += "M";
+			else inToilet += "F";
+		}
+		inToilet += "]";
+		System.out.println(inToilet);
+	}
 	
 	
 //	public Queue<ArrayList<Person>> getQueueToToilet() {
