@@ -12,13 +12,16 @@ public class Toilet extends Thread{
 	private int maxTimeOfUse;
 	private Semaphore semaphore;
 	private Gender inToiletNow;
+	private int counterToStarvation;
+	private final int maxUserSameGenderInSequence;
 	
-	Toilet(int maxOfUsers, int maxTimeOfUse){
+	Toilet(int maxOfUsers, int maxTimeOfUse, int maxUserSameGenderInSequence){
 		//TODO-> try_catch InvalidArgument
 		this.maxTimeOfUse = maxTimeOfUse;
 		this.maxOfUsers = maxOfUsers;
 		inToiletNow = null;
-		
+		this.maxUserSameGenderInSequence=maxUserSameGenderInSequence;
+		counterToStarvation=maxUserSameGenderInSequence;
 		semaphore = new Semaphore(maxOfUsers,true);
 		queueToToilet = new LinkedList<>();
 	}
@@ -41,9 +44,14 @@ public class Toilet extends Thread{
 				}
 				person.setSemaphore(semaphore);
 				person.start();
-
+//				try {
+//					person.join();//FIXME isso vai travar a execução para esperar a thread?
+//				} catch (InterruptedException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
 				queueToToilet.remove(person);
-				} else {
+			} else {
 				if(isEmpty()) inToiletNow = null;
 			} 
 			try {
@@ -55,8 +63,23 @@ public class Toilet extends Thread{
 		}
 	}
 
+	private void resetCounter() {
+		counterToStarvation = maxUserSameGenderInSequence;
+	}
+	
+	private void decreaseCounter() {
+		counterToStarvation--;
+	}
+	
+	private boolean checkCounter() {
+		return counterToStarvation>1;
+	}
+	
 	public Person getNextInQueue() {
-		if(inToiletNow != null) {
+		//FIXME starvation 
+		if(inToiletNow != null && checkCounter()) {
+			decreaseCounter();
+			//System.out.println(counterToStarvation);
 			switch(inToiletNow) {
 			case MALE:
 				return getNextInQueueByGender(Gender.MALE);
@@ -64,7 +87,13 @@ public class Toilet extends Thread{
 				return getNextInQueueByGender(Gender.FEMALE);
 			}
 		} else {
-			if(!queueToToilet.isEmpty()) return queueToToilet.getFirst();
+			if(!queueToToilet.isEmpty()) {
+				if(queueToToilet.getFirst().getGender() == inToiletNow || isEmpty())
+				{
+					resetCounter();
+					return queueToToilet.getFirst();
+				}
+			}
 		}
 		return null;
 	}
@@ -101,11 +130,6 @@ public class Toilet extends Thread{
 		System.out.println(inToilet);
 	}
 	
-	public boolean toiletIsEmpty() {
-		if(inToiletNow == null) return true;
-		else return false;
-	}
-	
 	public Queue<Person> getQueueToToilet() {
 		return queueToToilet;
 	}
@@ -125,35 +149,4 @@ public class Toilet extends Thread{
 	public void setMaxOfUsers(int maxOfUsers) {
 		this.maxOfUsers = maxOfUsers;
 	}
-	
-//	public void addToQueue(Person person) {
-//		if(!queueToToilet.isEmpty()) {
-//			ArrayList<Person> last = queueToToilet.getLast();		
-//			if(last.get(0).getGender() == person.getGender()) {
-//				if(last.size()<maxOfUsers) last.add(person);
-//				else addNewOnQueue(person);	
-//			} else addNewOnQueue(person);
-//		}else addNewOnQueue(person);
-//	}
-//
-//	private void addNewOnQueue(Person person) {
-//		ArrayList<Person> p = new ArrayList<>();
-//		p.add(person);
-//		queueToToilet.addLast(p);
-//	}
-	
-//	public void viewQueue() {
-//		String queue = "[";
-//		for(ArrayList<Person> array : queueToToilet) {
-//			queue += "(";
-//			for(Person person : array) {
-//				if(person.getGender() == Gender.MALE) queue += "M";
-//				else queue += "F";
-//			}
-//			queue += ")";
-//		}
-//		queue += "]";
-//		System.out.println(queue);
-//		
-//	}
 }
