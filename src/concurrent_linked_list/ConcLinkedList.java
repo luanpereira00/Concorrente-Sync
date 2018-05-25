@@ -15,7 +15,6 @@ public class ConcLinkedList<E> {
 	private Lock lockRemove; 
 	private Lock lockInsert;
 	private Condition remove;
-	private boolean isRemoving = false;
 	private LinkedList<E> linkedList;
 		
 	/**
@@ -37,7 +36,7 @@ public class ConcLinkedList<E> {
 		 * @author luanpereira
 		 * Anonymous class for a thread
 		 */
-		(new Thread() {
+		Thread t = new Thread() {
 			public void run() {
 				lockInsert.lock();
 				System.out.println("--- starting to insert");
@@ -51,7 +50,13 @@ public class ConcLinkedList<E> {
 				}
 				
 			}
-		}).start();
+		};
+		t.start();
+		try {
+			t.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -63,11 +68,10 @@ public class ConcLinkedList<E> {
 		 * @author luanpereira
 		 * Anonymous class for a thread
 		 */
-		(new Thread() {
+		Thread t = new Thread() {
 			public void run() {
 				synchronized (remove) {
 					lockRemove.lock();
-					isRemoving=true;
 					lockInsert.lock();
 					System.out.println("----- starting to remove");
 					try {
@@ -75,17 +79,19 @@ public class ConcLinkedList<E> {
 						linkedList.remove(element);
 						System.out.println(element + " removed succesfully");
 					} finally {
-						isRemoving=false;
-						remove.signalAll();
 						System.out.println("----- finishing to remove");
 						lockInsert.unlock();
 						lockRemove.unlock();
-						
 					}
 				}
-				
 			}
-		}).start();
+		};
+		t.start();
+		try {
+			t.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -99,20 +105,23 @@ public class ConcLinkedList<E> {
 		 * @author luanpereira
 		 * Anonymous class for a thread
 		 */
-		(new Thread() {
+		Thread t = new Thread() {
 			public void run() {
-				
 				synchronized (remove) {
-					if(isRemoving) {
-						remove.awaitUninterruptibly();
-					}
 					System.out.println("- starting to search");
 					result.set(linkedList.contains(element));
 					try_sleep(700);
 					System.out.println("- finishing to search");
 				}
 			}
-		}).start();
+		};
+		t.start();
+		try {
+			t.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
 		if(result.get()) {
 			System.out.println(element + " founded");
 		}else {
@@ -129,7 +138,6 @@ public class ConcLinkedList<E> {
 		try {
 			Thread.sleep(time);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
