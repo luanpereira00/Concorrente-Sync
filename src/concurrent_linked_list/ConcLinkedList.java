@@ -28,7 +28,9 @@ public class ConcLinkedList<E> {
 	public void insert(E element) {
 		(new Thread() {
 			public void run() {
+				
 				lockInsert.lock();
+				System.out.println("------ starting to insert");
 				try {
 					try {
 						Thread.sleep(200);
@@ -39,8 +41,10 @@ public class ConcLinkedList<E> {
 					linkedList.add(element);
 					System.out.println(element + " inserted succesfully");
 				} finally {
+					System.out.println("------ finishing to insert");
 					lockInsert.unlock();
 				}
+				
 			}
 		}).start();
 	}
@@ -49,25 +53,32 @@ public class ConcLinkedList<E> {
 		//TODO try catch to remove
 		(new Thread() {
 			public void run() {
-				lockRemove.lock();
-				isRemoving=true;
-				lockInsert.lock();
-				try {
+				
+				synchronized (remove) {
+					lockRemove.lock();
+					isRemoving=true;
+					lockInsert.lock();
+					System.out.println("------ starting to remove");
 					try {
-						Thread.sleep(500);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						try {
+							Thread.sleep(500);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						linkedList.remove(element);
+						System.out.println(element + " removed succesfully");
+					} finally {
+						isRemoving=false;
+						remove.signalAll();
+						//remove.notifyAll();
+						System.out.println("------ finishing to remove");
+						lockInsert.unlock();
+						lockRemove.unlock();
+						
 					}
-					linkedList.remove(element);
-					System.out.println(element + " removed succesfully");
-				} finally {
-					isRemoving=false;
-					remove.signalAll();
-					//remove.notifyAll();
-					lockInsert.unlock();
-					lockRemove.unlock();
 				}
+				
 			}
 		}).start();
 	}
@@ -76,17 +87,23 @@ public class ConcLinkedList<E> {
 		final AtomicBoolean result = new AtomicBoolean();
 		(new Thread() {
 			public void run() {
-				if(isRemoving) {
-					//remove.wait();
-					remove.awaitUninterruptibly();
+				
+				synchronized (remove) {
+					if(isRemoving) {
+						//remove.wait();
+						remove.awaitUninterruptibly();
+					}
+					System.out.println("------ starting to search");
+					result.set(linkedList.contains(element));
+					try {
+						Thread.sleep(700);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					System.out.println("------ finishing to search");
 				}
-				result.set(linkedList.contains(element));
-				try {
-					Thread.sleep(300);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				
 			}
 		}).start();
 		if(result.get()) {

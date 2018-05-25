@@ -14,10 +14,25 @@ public class Main {
 		c.remove("B");
 		c.search("C");
 		c.search("A");
+		c.remove("B");
 		c.insert("C");
 		c.search("A");
 		c.insert("D");
 		c.search("D");
+		c.search("O");
+		c.insert("A");
+		c.search("A");
+		c.insert("B");
+		c.search("A");
+		c.remove("B");
+		c.search("C");
+		c.search("A");
+		c.remove("B");
+		c.insert("C");
+		c.search("A");
+		c.insert("D");
+		c.search("D");
+		
 		//System.out.println(c.top());
 	}
 
