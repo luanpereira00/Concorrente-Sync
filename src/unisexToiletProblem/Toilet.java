@@ -1,11 +1,14 @@
 package unisexToiletProblem;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
 
+/**
+ * @author luanpereira
+ * Class that simulates a toilet
+ */
 public class Toilet extends Thread{
 	private LinkedList<Person> queueToToilet;
 	private int maxOfUsers;
@@ -15,22 +18,35 @@ public class Toilet extends Thread{
 	private int counterToStarvation;
 	private final int maxUserSameGenderInSequence;
 	
+	/**
+	 * Constructor for toilet
+	 * @param maxOfUsers Param to define max of users that toilet could have at same time
+	 * @param maxTimeOfUse Param to define max time each user could use
+	 * @param maxUserSameGenderInSequence Param to define a counter to starvation
+	 */
 	Toilet(int maxOfUsers, int maxTimeOfUse, int maxUserSameGenderInSequence){
-		//TODO-> try_catch InvalidArgument
+		if(maxOfUsers<=0 || maxTimeOfUse<=0 || maxUserSameGenderInSequence<=0) throw new IllegalArgumentException();
 		this.maxTimeOfUse = maxTimeOfUse;
 		this.maxOfUsers = maxOfUsers;
-		inToiletNow = null;
 		this.maxUserSameGenderInSequence=maxUserSameGenderInSequence;
 		counterToStarvation=maxUserSameGenderInSequence;
-		semaphore = new Semaphore(maxOfUsers,true);
+		
+		inToiletNow = null;
 		queueToToilet = new LinkedList<>();
+		semaphore = new Semaphore(maxOfUsers,true);
 	}
 	
+	/**
+	 * Method to see if toilet is empty
+	 * @return true if is empty and false if not
+	 */
 	public boolean isEmpty() {
 		return semaphore.availablePermits()==maxOfUsers;
 	}
 	
-	//TODO ATENTION -> Try_Catch
+	/* (non-Javadoc)
+	 * @see java.lang.Thread#run()
+	 */
 	public void run() {
 		Person person;
 		while(true) {
@@ -44,42 +60,42 @@ public class Toilet extends Thread{
 				}
 				person.setSemaphore(semaphore);
 				person.start();
-//				try {
-//					person.join();//FIXME isso vai travar a execução para esperar a thread?
-//				} catch (InterruptedException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
 				queueToToilet.remove(person);
 			} else {
 				if(isEmpty()) inToiletNow = null;
 			} 
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 		}
 	}
 
+	/**
+	 * Method to reset counter to starvation
+	 */
 	private void resetCounter() {
 		counterToStarvation = maxUserSameGenderInSequence;
 	}
 	
+	/**
+	 * Method to decrease var that is counter to starvation
+	 */
 	private void decreaseCounter() {
 		counterToStarvation--;
 	}
 	
+	/**
+	 * Check counter to starvation
+	 * @return true if starvation may be occuring, false if not
+	 */
 	private boolean checkCounter() {
 		return counterToStarvation>1;
 	}
 	
-	public Person getNextInQueue() {
-		//FIXME starvation 
+	/**
+	 * Get next in queue (not exactly next in queue, it is more like a scheduler to toilet)
+	 * @return the next to toilet
+	 */
+	public Person getNextInQueue() {	
 		if(inToiletNow != null && checkCounter()) {
 			decreaseCounter();
-			//System.out.println(counterToStarvation);
 			switch(inToiletNow) {
 			case MALE:
 				return getNextInQueueByGender(Gender.MALE);
@@ -98,6 +114,11 @@ public class Toilet extends Thread{
 		return null;
 	}
 	
+	/**
+	 * Method to get next in queue that has same gender in argument
+	 * @param gender the gender to search
+	 * @return the next
+	 */
 	private Person getNextInQueueByGender(Gender gender) {
 		for(Person p : queueToToilet) {
 			if(p.getGender() == gender) return p;
@@ -105,11 +126,18 @@ public class Toilet extends Thread{
 		return null;
 	}
 
+	/**
+	 * Method to add next person in queue
+	 * @param person the person
+	 */
 	public void addToQueue(Person person) {
 		person.setTimeToUse(ThreadLocalRandom.current().nextInt(1,maxTimeOfUse+1));
 		queueToToilet.addLast(person);
 	}
 
+	/**
+	 * Method to see queue to toilet, only for tests
+	 */
 	public void viewQueue() {
 		String queue = "QUEUE =  [";
 		for(Person person : queueToToilet) {
@@ -120,6 +148,10 @@ public class Toilet extends Thread{
 		System.out.println(queue);
 	}
 	
+	/**
+	 * Method to see toilet, only for tests
+	 * @param availablePermits 
+	 */
 	public void viewToilet(int availablePermits) {
 		String inToilet = "TOILET = [";
 		for(int i=maxOfUsers; i>availablePermits; i--) {
@@ -130,23 +162,23 @@ public class Toilet extends Thread{
 		System.out.println(inToilet);
 	}
 	
-	public Queue<Person> getQueueToToilet() {
-		return queueToToilet;
-	}
+//	public Queue<Person> getQueueToToilet() {
+//		return queueToToilet;
+//	}
 	
-	public Semaphore getSemaphore() {
-		return semaphore;
-	}
+//	public Semaphore getSemaphore() {
+//		return semaphore;
+//	}
 	
-	public int getMaxTimeOfUse() {
-		return maxTimeOfUse;
-	}
+//	public int getMaxTimeOfUse() {
+//		return maxTimeOfUse;
+//	}
 
-	public int getMaxOfUsers() {
-		return maxOfUsers;
-	}
+//	public int getMaxOfUsers() {
+//		return maxOfUsers;
+//	}
 
-	public void setMaxOfUsers(int maxOfUsers) {
-		this.maxOfUsers = maxOfUsers;
-	}
+//	public void setMaxOfUsers(int maxOfUsers) {
+//		this.maxOfUsers = maxOfUsers;
+//	}
 }
