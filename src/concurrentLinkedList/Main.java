@@ -1,4 +1,4 @@
-package concurrent_linked_list;
+ package concurrentLinkedList;
 
 //Questionamente: durante iniciar uma remocao, eh necessario esperar as buscas concluirem?
 /**
@@ -13,34 +13,48 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		System.out.println("Hello linked list");
-		ConcLinkedList<Integer> c = new ConcLinkedList<>();
+		ConcurrentLinkedList<Integer> c = new ConcurrentLinkedList<>();
 		
-		(new Thread() {
+		Thread tS = new Thread() {
 			public void run() {
-				int var = 10;
+				int var = 20;
 				for(int i=0;i<var; i++) {
 					c.search(i);
 				}
 			}
-		}).start();
+		};
 		
-		(new Thread() {
+		Thread tR = new Thread() {
 			public void run() {
 				int var = 10;
 				for(int i=0;i<var; i+=3) {
 					c.remove(i);
 				}
 			}
-		}).start();
+		};
 		
-		(new Thread() {
+		Thread tI = new Thread() {
 			public void run() {
-				int var = 10;
+				int var = 30;
 				for(int i=0;i<var; i+=2) {
 					c.insert(i);
 				}
 			}
-		}).start();
+		};
+		
+		tI.start();
+		tR.start();
+		tS.start();
+		
+		try {
+			tI.join();
+			tR.join();
+			tS.join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 }

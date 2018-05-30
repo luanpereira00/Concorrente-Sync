@@ -1,8 +1,5 @@
 package unisexToiletProblem;
 
-//USAR NESSE PROBLEMA: SEMAFOROS
-//USAR NO OUTRO PROBLEMA: BLOQUEIOS EXPLICITOS
-
 /**
  * @author luanpereira
  * Main class
